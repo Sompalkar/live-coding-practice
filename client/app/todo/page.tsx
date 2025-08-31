@@ -1,12 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
+import { FormEvent, HtmlHTMLAttributes, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useAuthStore from '@/store/page'
+import axios from 'axios'
 
 export default function TodoPage() {
   const { user, isAuthenticated, isLoading, logout, fetchCurrentUser } = useAuthStore()
   const router = useRouter()
+
+  const [inputTodo, setInputTodo]=useState<string>('')
+  const [todos, setTodos]= useState<string[]>([])
+const [ loading, setLoading]= useState<boolean>(false);
+
 
   
 
@@ -21,6 +27,32 @@ export default function TodoPage() {
         <div className="text-xl">Loading...</div>
       </div>
     )
+  }
+
+
+  const handleSubmit= async (e:FormEvent<HTMLFormElement>)=>{
+
+      e.preventDefault()
+     
+      if (!inputTodo.trim()) return
+       
+          try { 
+            
+                  const response= await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/todo/createTodo`,{
+                      data:inputTodo
+            
+                  })
+                  console.log(response)
+
+
+          } catch (error) {
+                        
+             console.log(error)
+             
+            }finally{ 
+            }
+
+
   }
  
 
@@ -43,6 +75,17 @@ export default function TodoPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Your Todos</h2>
           <p className="text-gray-500">Todo functionality will be implemented here...</p>
+        </div>
+
+        <div>
+
+
+          <form onSubmit={handleSubmit}>
+
+
+            <input type='text' value={inputTodo} placeholder='enter todo' onChange={(e)=> setInputTodo(e.target.value)} />
+            <button type='submit'> {loading ? "Adding todo ... " : "Add Todo"} </button>
+          </form>
         </div>
       </div>
     </div>
