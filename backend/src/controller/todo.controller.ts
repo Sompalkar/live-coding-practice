@@ -30,14 +30,15 @@ export const createTodo = async ( req: Request, res: Response )=>{
 
 
     const { title , completed } = req.body;
-    console.log(title, completed);
+    const { userId } = req.body;
+    console.log(title, completed, userId);
         try {
             
             const newTodo=  await Todo.create({ title, completed })
 
             res.status(201).json({
                 message:"Todo created successfully",
-                data: newTodo
+                data: newTodo 
             })
 
 
