@@ -3,18 +3,31 @@ import Todo from "../models/todo.model.js";
 
 export const getTodos= async (  req :Request, res :Response )=>{
 
-             try {
-                
 
-                 const allTodos= await Todo.find();
+              const {userId}= req.body
+              console.log("---------", req.body)
 
-                 res.status(200).json({
+             try { 
+
+                 if( !userId){
+                    return res.status(400).json({ message :"userId is missing in the request body"})
+
+                 }
+
+                 const allTodos = await Todo.find({userId})
+
+                 if(    allTodos.length === 0){
+                    return res.status(404).json({ message :"No todos found for the user"})
+                 }
+
+                 return res.status(200).json({
                     message:"Todos fetched successfully",
-                    data: allTodos
+                   allTodos
                  })
 
+
              } catch (error) {  
-                res.status(500).json({
+                return res.status(500).json({
                     message:"Todos fetching failed",
                     error: error
                 })
@@ -29,25 +42,22 @@ export const getTodos= async (  req :Request, res :Response )=>{
 export const createTodo = async ( req: Request, res: Response )=>{
 
 
-    const { title , completed } = req.body;
-    const { userId } = req.body;
-    console.log(title, completed, userId);
-        try {
-            
-            const newTodo=  await Todo.create({ title, completed })
+    const { title , completed = false, userId } = req.body || {};
 
-            res.status(201).json({
-                message:"Todo created successfully",
-                data: newTodo 
-            })
+    try {
 
 
-        } catch (error) {
-            res.status(500).json({
-                message:"Todo creation failed",
-                error: error
-            })
-        }
+         const newTodo = await Todo.create({ title: title.trim(), completed, userId });
+
+         return res.status(201).json({
+            message:"Todo created successfully",
+            data: newTodo
+         })
+        
+    } catch (error: any) {
+        const message = error?.message || 'Todo creation failed'
+        res.status(500).json({ message })
+    }
 
 
     }
@@ -61,13 +71,13 @@ export const createTodo = async ( req: Request, res: Response )=>{
         try {
             const updatedTodo = await Todo.findByIdAndUpdate(_id, {completed:true}, {new:true})
                 console.log(updatedTodo);           
-            res.status(200).json({                  
+            return res.status(200).json({                  
                 message:"Todo updated successfully",
                 data: updatedTodo   
             })
             
         } catch (error) {
-            res.status(500).json({
+            return res.status(500).json({
             message:"Todo updating failed", 
             error: error
         })
@@ -76,28 +86,15 @@ export const createTodo = async ( req: Request, res: Response )=>{
  }
 
 
+
+
  export const deleteTodo = async (req:Request , res: Response)=>{
 
 
-          const { _id} = req.body;
+        //   const { _id} = req.body;
+          console.log(req.body)
 
-          try {
-  
-             const response= await Todo.findByIdAndDelete(_id);
-
-             res.status(200).json({
-                message:"Todo deleted successfully",
-                data:response
-            
-            }
-             )
-
-
-          } catch (error) {
-            res.status(500).json({  
-                message:"Todo deleting failed",
-                error: error
-            })
-            
-          }
+ 
+ 
+ 
  }
