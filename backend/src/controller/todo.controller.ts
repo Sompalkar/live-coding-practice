@@ -1,11 +1,11 @@
-import type { Request, Response } from "express";
+import { response, type Request, type Response } from "express";
 import Todo from "../models/todo.model.js";
 
 export const getTodos= async (  req :Request, res :Response )=>{
 
 
               const {userId}= req.body
-              console.log("---------", req.body)
+            //   console.log("---------", req.body)
 
              try { 
 
@@ -91,9 +91,25 @@ export const createTodo = async ( req: Request, res: Response )=>{
  export const deleteTodo = async (req:Request , res: Response)=>{
 
 
-        //   const { _id} = req.body;
-          console.log(req.body)
+          const { todoId} = req.body;
+        //   console.log(req.body)
 
+
+        try {
+            
+            const response = await Todo.findByIdAndDelete({_id:todoId})
+
+                console.log(response)
+
+
+        
+                return res.status(200).json({message:"Todo successfully deleted..."})
+
+        } catch (error) {
+
+            return res.status(400).json({error, message:"Error deleting Todo..."})
+            
+        }
  
  
  
