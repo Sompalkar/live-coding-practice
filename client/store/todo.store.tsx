@@ -39,11 +39,8 @@ const todoStore = create<TodoState>()(
  
          removeTodos: (todoId: string) => {
           set((state) => ({
-
-                            todos: state.todos.filter(todo => todo.todoId !== todoId
-
-
-        }))
+            todos: state.todos.filter(todo => todo.todoId !== todoId)
+          }))
       },
  
       toggleTodoStatus: (todoId: string) => {

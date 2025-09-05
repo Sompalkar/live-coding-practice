@@ -48,7 +48,7 @@ const useAuthStore = create<UserState>()(
             { withCredentials: true }
           )
           
-          const userData = response.data
+          const userData = response.data.data
           set({ user: userData, isAuthenticated: true, isLoading: false })
           return true
         } catch (error: any) {
@@ -69,7 +69,7 @@ const useAuthStore = create<UserState>()(
             { withCredentials: true }
           )
           
-          const userData = response.data
+          const userData = response.data.data
           set({ user: userData, isAuthenticated: true, isLoading: false })
           return true
         } catch (error: any) {
@@ -103,7 +103,7 @@ const useAuthStore = create<UserState>()(
             { withCredentials: true }
           )
           
-          const userData = response.data
+          const userData = response.data.data
           set({ user: userData, isAuthenticated: true, isLoading: false })
 
         } catch (error: any) { 
