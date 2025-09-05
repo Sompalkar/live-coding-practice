@@ -17,7 +17,7 @@ export const registerUser = async (req: Request, res: Response) => {
     if (existingEmail) {
       return res.status(400).json({
         message: "User already exists with this email. Try to login.",
-        data: email,
+          email,
       });
     } 
 
@@ -28,7 +28,7 @@ export const registerUser = async (req: Request, res: Response) => {
     if (existingUsername) {
       return res.status(400).json({
         message: "Username already taken. Please choose another username.",
-        data: username,
+      username,
       });
     }
  
@@ -60,11 +60,12 @@ export const registerUser = async (req: Request, res: Response) => {
 
 
 
-    const { password: _, ...userWithoutPassword } = registeredUser.toObject();
+    const { password: _, ...userData } = registeredUser.toObject();
 
     return res.status(201).json({
+      success: true,
       message: "User registered successfully",
-      data: userWithoutPassword,
+      data: userData,
     });
   } catch (error) {
     return res.status(500).json({
@@ -108,11 +109,12 @@ export const loginUser = async ( req:Request , res:Response)=>{
             maxAge: 24 * 60 * 60 * 1000,
         })
 
-        const {password: _, ...userWithoutPassword} = response.toObject();
+        const {password: _, ...userData} = response.toObject();
 
         return res.status(200).json({
+            success: true,
             message: "User logged in successfully",
-            data: userWithoutPassword,
+            data: userData,
         })
 
     } catch (error) {
@@ -161,11 +163,12 @@ export const verifyUser = async (req: Request, res: Response) => {
     }
 
    
-    const { password, ...userWithoutPassword } = response.toObject();
+    const { password, ...userData } = response.toObject();
 
     return res.status(200).json({
+      success: true,
       message: "User verified successfully.",
-      data: userWithoutPassword,
+      data: userData,
       isAuthenticated: true,
     });
   } catch (error) {
@@ -193,8 +196,9 @@ export const logoutUser = async (req: Request, res: Response) => {
         });
 
         return res.status(200).json({
+            success: true,
             message: "User logged out successfully",
-            isAuthenticated: false
+            data: { isAuthenticated: false }
         });
 
     } catch (error) {

@@ -21,8 +21,9 @@ export const getTodos= async (  req :Request, res :Response )=>{
                  }
 
                  return res.status(200).json({
+                    success: true,
                     message:"Todos fetched successfully",
-                   allTodos
+                    data: { todos: allTodos }
                  })
 
 
@@ -50,8 +51,9 @@ export const createTodo = async ( req: Request, res: Response )=>{
          const newTodo = await Todo.create({ title: title.trim(), completed, userId });
 
          return res.status(201).json({
+            success: true,
             message:"Todo created successfully",
-            data: newTodo
+            data: { todo: newTodo }
          })
         
     } catch (error: any) {
@@ -72,8 +74,9 @@ export const createTodo = async ( req: Request, res: Response )=>{
             const updatedTodo = await Todo.findByIdAndUpdate(_id, {completed:true}, {new:true})
                 console.log(updatedTodo);           
             return res.status(200).json({                  
+                success: true,
                 message:"Todo updated successfully",
-                data: updatedTodo   
+                data: { todo: updatedTodo }   
             })
             
         } catch (error) {
@@ -84,6 +87,42 @@ export const createTodo = async ( req: Request, res: Response )=>{
     }
 
  }
+
+ export const editTodo = async (req: Request, res: Response) => {
+    const { _id, title, completed, userId } = req.body;
+
+    try {
+        // Verify the todo belongs to the user
+        const existingTodo = await Todo.findOne({ _id, userId });
+        if (!existingTodo) {
+            return res.status(404).json({
+                message: "Todo not found or you don't have permission to edit this todo"
+            });
+        }
+
+        // Update the todo
+        const updatedTodo = await Todo.findByIdAndUpdate(
+            _id,
+            { 
+                title: title.trim(),
+                ...(completed !== undefined && { completed })
+            },
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Todo updated successfully",
+            data: { todo: updatedTodo }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Todo updating failed",
+            error: error
+        });
+    }
+}
 
 
 
@@ -103,7 +142,11 @@ export const createTodo = async ( req: Request, res: Response )=>{
 
 
         
-                return res.status(200).json({message:"Todo successfully deleted..."})
+                return res.status(200).json({
+                    success: true,
+                    message:"Todo successfully deleted",
+                    data: { deleted: true }
+                })
 
         } catch (error) {
 

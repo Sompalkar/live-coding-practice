@@ -8,6 +8,16 @@ export const createTodoSchema = z.object({
     })
 })
 
+export const editTodoSchema = z.object({
+    body: z.object({
+        _id: z.string().trim().regex(/^[0-9a-fA-F]{24}$/, 'todoId must be a valid ObjectId'),
+        title: z.string().trim().min(1, "title is required").max(200),
+        completed: z.boolean().optional(),
+        userId: z.string().trim().regex(/^[0-9a-fA-F]{24}$/, 'userId must be a valid ObjectId'),
+    })
+})
+
 export type CreateTodoBody = z.infer<typeof createTodoSchema>['body']
+export type EditTodoBody = z.infer<typeof editTodoSchema>['body']
 
 
