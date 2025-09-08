@@ -1,93 +1,121 @@
-'use client'
 
+'use client'
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 interface ChatMessage {
-    _id: string;
-    message: string;
-    createdAt: string;
+  _id: string;
+  message: string;
+  createdAt: string;
 }
 
 export default function Chat() {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [inputMessage, setInputMessage] = useState<string>("");
-    const [socket, setSocket] = useState<Socket | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState<string>("");
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-        // Load initial messages first (reliable fallback)
-        loadInitialMessages();
+  useEffect(() => {
+    loadInitialMessages();
 
-        // Then connect to Socket.io for realtime updates
-        const newSocket = io("http://localhost:8000");
-        setSocket(newSocket);
+    const newSocket = io("http://localhost:8000");
+    setSocket(newSocket);
 
-        // Listen for new messages
-        newSocket.on("newMessage", (message: ChatMessage) => {
-            setMessages(prev => [...prev, message]);
-        });
+    newSocket.on("newMessage", (message: ChatMessage) => {
+      setMessages(prev => [...prev, message]);
+    });
 
-        return () => {
-            newSocket.close();
-        };
-    }, []);
-
-    const loadInitialMessages = async () => {
-        try {
-            const response = await axios.get("http://localhost:8000/api/v1/chat/getAllChats");
-            setMessages(response.data.data);
-        } catch (error) {
-            console.error("Error loading initial messages:", error);
-        }
+    return () => {
+      newSocket.close();
     };
+  }, []);
 
-    const handleSendMessage = async () => {
-        if (!inputMessage.trim()) return;
+  useEffect(() => {
+    // Auto-scroll to latest message
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-        try {
-            await axios.post("http://localhost:8000/api/v1/chat/create", {
-                message: inputMessage,
-            });
+  const loadInitialMessages = async () => {
+    try {
+      const response = await axios.get("http://localhost:8000/api/v1/chat/getAllChats");
+      setMessages(response.data.data);
+    } catch (error) {
+      console.error("Error loading initial messages:", error);
+    }
+  };
 
-            // Message will be added via socket event, so we don't need to manually add it here
-            setInputMessage("");
-        } catch (error) {
-            console.error("Error sending message:", error);
-        }
-    };
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
 
-    return (
-        <div className="max-w-2xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Realtime Chat</h1>
-            
-            <div className="mb-4 flex gap-2">
-                <input 
-                    type="text" 
-                    placeholder="Enter your message..." 
-                    onChange={(e) => setInputMessage(e.target.value)} 
-                    value={inputMessage}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                />
-                <button 
-                    onClick={handleSendMessage}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    try {
+      await axios.post("http://localhost:8000/api/v1/chat/create", {
+        message: inputMessage,
+      });
+      setInputMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen max-w-2xl mx-auto border border-gray-300 bg-gray-50">
+      {/* Header */}
+      <div className="p-4 bg-blue-600 text-white font-semibold text-lg shadow-md">
+        Realtime Chat
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-100">
+        {messages.map((message, index) => {
+          const isOwn = index % 2 === 0; // simple fake left/right alternation
+          return (
+            <div
+              key={message._id}
+              className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`max-w-xs md:max-w-md p-3 rounded-2xl shadow-sm ${
+                  isOwn
+                    ? "bg-blue-500 text-white rounded-br-none"
+                    : "bg-white text-gray-800 rounded-bl-none"
+                }`}
+              >
+                <p>{message.message}</p>
+                <p
+                  className={`text-xs mt-1 ${
+                    isOwn ? "text-blue-100" : "text-gray-400"
+                  }`}
                 >
-                    Send
-                </button>
+                  {new Date(message.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
             </div>
+          );
+        })}
+        <div ref={chatEndRef} />
+      </div>
 
-            <div className="space-y-3">
-                {messages.map((message) => ( 
-                    <div key={message._id} className="p-3 bg-gray-100 rounded-lg">
-                        <p className="text-gray-800">{message.message}</p>  
-                        <p className="text-xs text-gray-500 mt-1">
-                            {new Date(message.createdAt).toLocaleString()}
-                        </p>    
-                    </div>      
-                ))}
-            </div>
-        </div>
-    );
-}   
+      {/* Input */}
+      <div className="p-3 bg-white flex items-center gap-2 border-t">
+        <input
+          type="text"
+          placeholder="Type a message..."
+          onChange={(e) => setInputMessage(e.target.value)}
+          value={inputMessage}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+        />
+        <button
+          onClick={handleSendMessage}
+          className="px-5 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
